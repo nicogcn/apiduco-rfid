@@ -24,13 +24,13 @@
 import RPi.GPIO as GPIO
 import MFRC522
 import signal
-
+import sqlite3
 continue_reading = True
 
 # Capture SIGINT for cleanup when the script is aborted
 def end_read(signal,frame):
     global continue_reading
-    print "Ctrl+C captured, ending read."
+    #print "Ctrl+C captured, ending read."
     continue_reading = False
     GPIO.cleanup()
 
@@ -41,19 +41,20 @@ signal.signal(signal.SIGINT, end_read)
 MIFAREReader = MFRC522.MFRC522()
 
 # Welcome message
-print "Welcome to the MFRC522 data read example"
-print "Press Ctrl-C to stop."
+#print "Welcome to the MFRC522 data read example"
+#print "Press Ctrl-C to stop."
 
 # This loop keeps checking for chips. If one is near it will get the UID and authenticate
 while continue_reading:
-    
-    # Scan for cards    
+    print 1 + 1
+    GPIO.setwarnings(False)
+    # Scan for cards
     (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
 
     # If a card is found
     if status == MIFAREReader.MI_OK:
-        print "Card detected"
-    
+        #print "Card detected"
+        1 + 1
     # Get the UID of the card
     (status,uid) = MIFAREReader.MFRC522_Anticoll()
 
@@ -62,7 +63,16 @@ while continue_reading:
 
         # Print UID
         print "Card read UID: %s,%s,%s,%s" % (uid[0], uid[1], uid[2], uid[3])
-    
+    	rfid=[uid[0], uid[1], uid[2], uid[3]]
+        rfidTotal = `rfid[0]` + "," + `rfid[1]` + "," + `rfid[2]` + "," + `rfid[3]`
+	isXimena= "Hola Ximena" if rfidTotal == "251,111,217,174" else "Y tu quien eres?"
+        print isXimena
+	conn = sqlite3.connect('/home/pi/registLab.db');
+	if isXimena == "Hola Ximena":
+		sql0 = "INSERT INTO students VALUES ('%s', '%s', '%s')" %  (1, "XImenitaQuerida", rfidTotal)
+#	cursor = conn.cursor()
+	conn.execute(sql0)
+	conn.commit() 
         # This is the default key for authentication
         key = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
         
@@ -77,5 +87,7 @@ while continue_reading:
             MIFAREReader.MFRC522_Read(8)
             MIFAREReader.MFRC522_StopCrypto1()
         else:
-            print "Authentication error"
+            #print "Authentication error"
+            1 + 1
 
+	break
